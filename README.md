@@ -4,7 +4,7 @@ A high-performance DNS over HTTPS (DoH) proxy server implemented in Go, featurin
 
 ## Features
 
-✅ **Full Feature Port** - Functionally identical to the Python version:[DNS DoH Proxy Pyton Edition](https://github.com/crb912/SmartDoHProxy)
+✅ **Full Feature Port** - Functionally identical to the Python version:[DoH Proxy Python Edition](https://github.com/crb912/SmartDoHProxy)
 * **DNS over HTTPS (DoH) Support**
 * **Smart DNS Splitting** (Based on GFWList rules)
 * **Persistent DNS Cache**
