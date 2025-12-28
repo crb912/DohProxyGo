@@ -37,18 +37,25 @@ jobs:
 
       - name: Build binary
         run: |
-          BINARY_NAME=dohproxygo
-          if [ "${{ matrix.goos }}" == "windows" ]; then
-            BINARY_NAME="${BINARY_NAME}.exe"
-          fi
+          # 基础文件名（不带后缀）
+          BASE_NAME=dohproxygo
           
-          OUTPUT_NAME=${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 先拼接平台信息
+          OUTPUT_NAME=${BASE_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}
+          
+          # 对于 arm64 OpenWrt 兼容的，加上 -v8 标识（可选，你可以保留）
           if [ -n "${{ matrix.goarm64 }}" ]; then
             OUTPUT_NAME=${OUTPUT_NAME}-v8
           fi
           
+          # Windows 平台才在最后加 .exe
+          if [ "${{ matrix.goos }}" == "windows" ]; then
+            OUTPUT_NAME=${OUTPUT_NAME}.exe
+          fi
+          
           mkdir -p release
           
+          # 构建命令
           if [ -n "${{ matrix.goarm64 }}" ]; then
             GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} GOARM64=${{ matrix.goarm64 }} \
               go build -ldflags="-s -w" -o release/${OUTPUT_NAME} .
@@ -56,6 +63,8 @@ jobs:
             GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
               go build -ldflags="-s -w" -o release/${OUTPUT_NAME} .
           fi
+          
+          echo "Generated binary: release/${OUTPUT_NAME}"
 
       - name: Prepare release assets (zip with config.toml)
         run: |
