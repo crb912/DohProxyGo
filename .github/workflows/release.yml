@@ -3,25 +3,27 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # 当你推送以 v 开头的标签（如 v1.0.0）时触发
+      - 'v*'
 
 permissions:
-  contents: write
-  
+  contents: write  # 允许创建 release 和上传资产
+
 jobs:
-  build:
-    name: Build Binary
+  build-and-release:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 定义需要编译的目标平台
         include:
           - goos: linux
             goarch: amd64
+          - goos: linux
+            goarch: arm64
           - goos: windows
             goarch: amd64
           - goos: darwin
             goarch: amd64
+          - goos: darwin
+            goarch: arm64
 
     steps:
       - name: Checkout code
@@ -30,35 +32,38 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.5' # 根据你的 README 要求
+          go-version: '1.23'  # 或 'stable'，避免写不存在的版本
 
-      - name: Build
+      - name: Build binary
         run: |
           BINARY_NAME=dohproxygo
-          if [ "${{ matrix.goos }}" = "windows" ]; then
+          if [ "${{ matrix.goos }}" == "windows" ]; then
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o release/${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }} .
+          
+          OUTPUT_NAME=${BINARY_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}
+          
+          mkdir -p release
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+            -ldflags="-s -w" \
+            -o release/${OUTPUT_NAME} .
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: binary-${{ matrix.goos }}
-          path: release/*
+      - name: Prepare release assets (zip with config.toml)
+        run: |
+          mkdir -p assets
+          cp release/* assets/
+          cp config.toml assets/
+          
+          cd assets
+          ZIP_NAME=DohProxyGo-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          zip -j "${ZIP_NAME}" *
+          echo "Created ${ZIP_NAME}"
 
-  release:
-    name: Create Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-
-      - name: Create GitHub Release
+      - name: Upload assets to release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ./artifacts/**/*
+          files: |
+            assets/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
