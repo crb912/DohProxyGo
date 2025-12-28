@@ -16,13 +16,13 @@ A high-performance DNS over HTTPS (DoH) proxy server implemented in Go, featurin
 
 ## Project Structure
 
-├── main.go # Entry point 
-├── config.go # Configuration loading and management 
-├── dns.go # DNS message parsing and construction 
-├── doh.go # DoH client and server logic 
-├── config.toml # Configuration file 
-├── go.mod # Go module dependencies 
-└── README.md # Documentation
+├── main.go # Entry point    
+├── config.go # Configuration loading and management    
+├── dns.go # DNS message parsing and construction   
+├── doh.go # DoH client and server logic   
+├── config.toml # Configuration file   
+├── go.mod # Go module dependencies   
+└── README.md # Documentation  
 
 ## Build
 
